@@ -94,16 +94,15 @@ class SearchTree {
         while (current->value != value) {
           parent = current;
           if (value > current->value) {
-            // this feels too over-the-top
-            if (!current->right) {
+            if (!current->greater) {
               throw ValueNotFound();
             }
-            current = current->right;
+            current = current->greater;
           } else {
-            if (!current->left) {
+            if (!current->lesser) {
               throw ValueNotFound();
             }
-            current = current->left;
+            current = current->lesser;
           }
         }
 
@@ -120,19 +119,20 @@ class SearchTree {
 
   private:
     struct Node {
-      Node(T value) : value(value), left(nullptr), right(nullptr) {}
+      Node(T value) : value(value), lesser(nullptr), greater(nullptr) {}
       ~Node() {
-        if (left) {
-          delete left;
+        if (lesser) {
+          delete lesser;
         }
 
-        if (right) {
-          delete right;
+        if (greater) {
+          delete greater;
         }
       }
+
       T value;
-      Node *left;
-      Node *right;
+      Node *lesser;
+      Node *greater;
 
       void insert(T value) {
         if (value == this->value) {
@@ -140,43 +140,43 @@ class SearchTree {
         }
 
         if (value < this->value) {
-          if (left) {
-            left->insert(value);
+          if (lesser) {
+            lesser->insert(value);
           } else {
-            left = new Node(value);
+            lesser = new Node(value);
           }
         } else {
-          if (right) {
-            right->insert(value);
+          if (greater) {
+            greater->insert(value);
           } else {
-            right = new Node(value);
+            greater = new Node(value);
           }
         }
       }
 
       int countChildren() {
         int count = 0;
-        if (left) {
+        if (lesser) {
           count++;
-          count += left->countChildren();
+          count += lesser->countChildren();
         }
 
-        if (right) {
+        if (greater) {
           count++;
-          count += right->countChildren();
+          count += greater->countChildren();
         }
         return count;
       }
 
       void print(std::ostream *stream) {
-        if (left) {
-          left->print(stream);
+        if (lesser) {
+          lesser->print(stream);
         }
 
         *stream << value << " ";
 
-        if (right) {
-          right->print(stream);
+        if (greater) {
+          greater->print(stream);
         }
       }
 
@@ -185,16 +185,16 @@ class SearchTree {
           return true;
         }
 
-        return (left && left->contains(value))
-            || (right && right->contains(value));
+        return (lesser && lesser->contains(value))
+            || (greater && greater->contains(value));
       }
 
       T getMin() {
-        return left ? left->getMin() : value;
+        return lesser ? lesser->getMin() : value;
       }
 
       T getMax() {
-        return right ? right->getMax() : value;
+        return greater ? greater->getMax() : value;
       }
     };
 
