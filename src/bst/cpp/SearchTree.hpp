@@ -94,7 +94,43 @@ class SearchTree {
       }
     }
 
-    search_result get_successor(T value);
+    search_result get_successor(T value) {
+      search_result result;
+      if (root) {
+        Node *current = root;
+        while (current != nullptr) {
+          if (value == current->value) {
+            if (current->greater != nullptr) {
+              result.success = true;
+              result.value = current->greater->value;
+            } else {
+              result.success = false;
+            }
+
+            break;
+          }
+          if (value > current->value) {
+            if (current->greater) {
+              current = current->greater;
+            } else {
+              result.success = false;
+              break;
+            }
+          } else if (value < current->value) {
+            if (current->lesser) {
+              current = current->lesser;
+            } else {
+              result.success = false;
+              break;
+            }
+          }
+        }
+      } else {
+        result.success = false;
+      }
+
+      return result;
+    }
 
   private:
     struct Node {
