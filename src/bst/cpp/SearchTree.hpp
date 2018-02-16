@@ -88,28 +88,7 @@ class SearchTree {
 
     void delete_value(T value) {
       if (root) {
-        Node *parent = nullptr;
-        Node *current = root;
-
-        while (current->value != value) {
-          parent = current;
-          if (value > current->value) {
-            if (!current->greater) {
-              throw ValueNotFound();
-            }
-            current = current->greater;
-          } else {
-            if (!current->lesser) {
-              throw ValueNotFound();
-            }
-            current = current->lesser;
-          }
-        }
-
-        // replace the node with one of its leaves
-        // add elements of the other branch to it
-        // maybe keep iterating over the min value? (lazy idea)
-        // requires moving this function to Node
+        root->deleteValue(value, &root);
       } else {
         throw ValueNotFound();
       }
@@ -151,6 +130,47 @@ class SearchTree {
           } else {
             greater = new Node(value);
           }
+        }
+      }
+
+      void deleteValue(T value, Node **rootPointer) {
+        Node **edge = nullptr;
+        Node *current = this;
+
+        while (current->value != value) {
+          if (value > current->value) {
+            if (!current->greater) {
+              throw ValueNotFound();
+            }
+            edge = &current->greater;
+          } else {
+            if (!current->lesser) {
+              throw ValueNotFound();
+            }
+            edge = &current->lesser;
+          }
+          current = *edge;
+        }
+
+        if (edge == nullptr) {
+          edge = rootPointer;
+        }
+        // leaf node
+        if (current->lesser && !current->greater) {
+          *edge = current->lesser;
+          current->lesser = nullptr;
+          delete current;
+        } else if (current->greater && !current->lesser) { // single branch
+          *edge = current->greater;
+          current->greater = nullptr;
+          delete current;
+        } else if (!(current->lesser && current->greater)) {
+          *edge = nullptr;
+          delete current;
+        } else { // both branches
+          T minGreater = current->greater->getMin();
+          current->value = minGreater;
+          current->greater->deleteValue(minGreater, &current->greater);
         }
       }
 
