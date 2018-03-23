@@ -2,88 +2,188 @@
 #include <cstddef>
 #include <algorithm>
 #include <cstring>
+#include <stdexcept>
 
-// 2 * n     -> smaller
-// 2 * n + 1 -> greater
 template <typename T>
 class Heap {
-private:
-  T *data;
-  size_t capacity;
-  size_t size;
+  private:
+    T *data;
+    std::size_t capacity;
+    std::size_t size;
 
-  void resize(size_t size) {
-    // no-op
-    if (size == capacity) {
-      return;
+    void resize(std::size_t size) {
+      // no-op
+      if (size == capacity) {
+        return;
+      }
+
+      T *newData = new T[size];
+      memcpy(newData, data, std::min(size, capacity));
+
+      delete[] data;
+      data = newData;
     }
 
-    T *newData = new T[size];
-    memcpy(newData, data, std::min(size, capacity));
-
-    delete[] data;
-    data = newData;
-  }
-
-  inline T& getElement(size_t index) {
-    return data[index-1];
-  }
-
-  void siftUp() {
-    int index = size;
-    while (getElement(index) > getElement(index / 2)) {
-      std::swap(getElement(index), getElement(index / 2));
-      index /= 2;
-    }
-  }
-
-public:
-  Heap() :
-    capacity(8),
-    size(0)
-  {
-    data = new T[size];
-  }
-
-  Heap(const Heap& other) :
-    capacity(other.capacity),
-    size(other.size)
-  {
-    data = new T[size];
-    memcpy(data, other.data, size);
-  }
-
-  ~Heap() {
-    delete[] data;
-  }
-
-  static Heap heapify(T *array, size_t size); // probably shouldn't be in class
-
-  void insert(T value) {
-    if (size == capacity) {
-      resize(capacity * 2);
+    inline T& item(std::size_t index) {
+      return data[index-1];
     }
 
-    data[size++] = value;
-    if (size > 1) {
-      siftUp();
+    void siftUp(std::size_t index) {
+      while (index > 1 && item(index) > item(index / 2)) {
+        std::swap(item(index), item(index / 2));
+        index /= 2;
+      }
     }
-  }
 
-  T getMax() {
-    return getElement(size);
-  }
+    void siftDown(std::size_t index = 1) {
+      while (index * 2 <= size && item(index * 2) > item(index)) {
+        if (index * 2 <= size && item(index * 2 + 1) > item(index * 2)) {
+          std::swap(item(index), item(index * 2 + 1));
+          index = index * 2 + 1;
+        } else {
+          std::swap(item(index), item(index * 2));
+          index *= 2;
+        }
+      }
+    }
 
-  size_t getSize() {
-    return size;
-  }
+    /*
+     * Frees up data for use outside of the Heap
+     */
+    void empty() {
+      data = nullptr;
+      size = 0;
+      capacity = 0;
+    }
 
-  bool isEmpty() {
-    return size == 0;
-  }
+  public:
+    Heap(std::size_t capacity) :
+      capacity(capacity),
+      size(0)
+    {
+      data = new T[capacity];
+    }
 
-  T extractMax();
-  void siftDown();
-  void remove(size_t index);
-  void heapSort(T *array, size_t size); // should work in place :};
+    Heap() : Heap(8) { }
+
+    Heap(const Heap& other) :
+      capacity(other.capacity),
+      size(other.size)
+    {
+      data = new T[size];
+      memcpy(data, other.data, size);
+    }
+
+    // copy-swap?
+    Heap& operator=(const Heap& other) {
+      Heap tmp = other;
+      std::swap(data, tmp.data);
+      std::swap(size, tmp.size);
+      std::swap(capacity, tmp.capacity);
+
+      return *this;
+    }
+
+    Heap(Heap&& other) {
+      data = other.data;
+      capacity = other.capacity;
+      size = other.size;
+
+      other.data = nullptr;
+      other.capacity = 0;
+      other.size = 0;
+    }
+
+    Heap& operator=(Heap&& other) {
+      Heap tmp = std::move(other);
+
+      std::swap(data, tmp.data);
+      std::swap(capacity, tmp.capacity);
+      std::swap(size, tmp.size);
+
+      return *this;
+    }
+
+    ~Heap() {
+      if (data != nullptr) {
+        delete[] data;
+      }
+    }
+
+    /*
+     * Creates a Heap using the array for data storage.
+     * The array will be managed by the Heap
+     */
+    Heap(T *data, std::size_t size) {
+      capacity = size;
+      this->size = size;
+      this->data = data;
+
+      for (std::size_t i = size; i > 0; i--) {
+        siftUp(i);
+      }
+    }
+
+    void insert(T value) {
+      if (size == capacity) {
+        resize(capacity * 2);
+      }
+
+      data[size] = value;
+      size++;
+      if (size > 1) {
+        siftUp(size);
+      }
+    }
+
+    T getMax() {
+      if (size == 0) {
+        throw std::length_error("Heap is empty");
+      }
+      return data[0];
+    }
+
+    std::size_t getSize() {
+      return size;
+    }
+
+    bool isEmpty() {
+      return size == 0;
+    }
+
+    T extractMax() {
+      if (size == 0) {
+        throw std::length_error("Heap is empty");
+      }
+
+      T value = std::move(data[0]);
+      data[0] = std::move(data[size-1]);
+      size--;
+
+      if (size > 1) {
+        siftDown();
+      }
+      return value;
+    }
+
+    void remove(std::size_t index) {
+      item(index) = item(size);
+      size--;
+      siftDown(index);
+    }
+
+    /*
+     * Sorts the internal array and frees it from the Heap
+     */
+    T* heapSort() {
+      while (size != 0) {
+        T value = extractMax();
+        data[size] = std::move(value);
+      }
+
+      T *array = data;
+      empty();
+
+      return array;
+    }
 };
