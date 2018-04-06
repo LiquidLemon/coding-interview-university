@@ -71,31 +71,31 @@ class Heap {
       size(other.size)
     {
       data = new T[size];
+      // TODO: copy elements not memory
       memcpy(data, other.data, size);
     }
 
     // copy-swap?
-    Heap& operator=(const Heap& other) {
-      Heap tmp = other;
-      std::swap(data, tmp.data);
-      std::swap(size, tmp.size);
-      std::swap(capacity, tmp.capacity);
+    Heap& operator=(Heap other) {
+      std::swap(data, other.data);
+      std::swap(size, other.size);
+      std::swap(capacity, other.capacity);
 
       return *this;
     }
 
-    Heap(Heap&& other) {
-      data = other.data;
-      capacity = other.capacity;
-      size = other.size;
-
+    Heap(Heap&& other) :
+      data(other.data),
+      capacity(other.capacity),
+      size(other.size)
+    {
       other.data = nullptr;
       other.capacity = 0;
       other.size = 0;
     }
 
     Heap& operator=(Heap&& other) {
-      Heap tmp = std::move(other);
+      Heap tmp(std::move(other));
 
       std::swap(data, tmp.data);
       std::swap(capacity, tmp.capacity);
@@ -151,7 +151,7 @@ class Heap {
       return size == 0;
     }
 
-    T extractMax() {
+    T& extractMax() {
       if (size == 0) {
         throw std::length_error("Heap is empty");
       }
