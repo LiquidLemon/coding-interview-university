@@ -77,9 +77,11 @@ class Heap {
 
     // copy-swap?
     Heap& operator=(Heap other) {
-      std::swap(data, other.data);
-      std::swap(size, other.size);
-      std::swap(capacity, other.capacity);
+      if (this != &other) {
+        std::swap(data, other.data);
+        std::swap(size, other.size);
+        std::swap(capacity, other.capacity);
+      }
 
       return *this;
     }
@@ -95,11 +97,13 @@ class Heap {
     }
 
     Heap& operator=(Heap&& other) {
-      Heap tmp(std::move(other));
+      if (this != *other) {
+        Heap tmp(std::move(other));
 
-      std::swap(data, tmp.data);
-      std::swap(capacity, tmp.capacity);
-      std::swap(size, tmp.size);
+        std::swap(data, tmp.data);
+        std::swap(capacity, tmp.capacity);
+        std::swap(size, tmp.size);
+      }
 
       return *this;
     }
