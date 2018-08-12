@@ -19,7 +19,7 @@ class Vector {
   size_t size();
   size_t capacity();
   bool is_empty();
-  T at(size_t); // replace with []
+  T& at(size_t); // replace with []
   void push(T);
   void insert(size_t, T);
   void prepend(T);
@@ -29,5 +29,6 @@ class Vector {
   int find(T);
 };
 
-template class Vector<int>;
+//template class Vector<int>;
+#include "Vector.cpp"
 #endif

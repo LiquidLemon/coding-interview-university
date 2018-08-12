@@ -24,7 +24,7 @@ bool Vector<T>::is_empty() {
 }
 
 template<typename T>
-T Vector<T>::at(size_t index) {
+T& Vector<T>::at(size_t index) {
   return items[index];
 }
 
@@ -66,6 +66,7 @@ template<typename T>
 T Vector<T>::delete_at(size_t index) {
   T value = items[index];
   length--;
+  // undefined behavior
   std::memcpy(items + index, items + index + 1, sizeof(T) * (length - index));
   return value;
 }

@@ -90,8 +90,8 @@ void insertsort(
    * }
    */
 
-  for (size_t i = 0; i < size; i++) {
-    if (i > 0 && cmp(array[i], array[i-1]) == Ordering::LT) {
+  for (size_t i = 1; i < size; i++) {
+    if (cmp(array[i], array[i-1]) == Ordering::LT) {
       T x = std::move(array[i]);
       int j;
       for (j = i - 1; j >= 0 && cmp(array[j], x) == Ordering::GT; j--) {
